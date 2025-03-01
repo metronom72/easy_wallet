@@ -1,0 +1,6 @@
+.aws-sam/
+dist/
+wallet_issue.zip
+infra/.terraform/
+infra/.terraform.lock.hcl
+infra/terraform.tfvars
