@@ -1,4 +1,4 @@
-package internal
+package encrypt
 
 import (
 	"crypto/aes"
@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-func md5Hash(passphrase string) []byte {
+func Md5Hash(passphrase string) []byte {
 	hasher := md5.New()
 	hasher.Write([]byte(passphrase))
 	hash := hasher.Sum(nil)
@@ -22,7 +22,7 @@ func md5Hash(passphrase string) []byte {
 func Encrypt(data, passphrase string) (string, error) {
 	log.Println("[INFO] Starting encryption process...")
 
-	key := md5Hash(passphrase)
+	key := Md5Hash(passphrase)
 	log.Println("[INFO] Encryption key derived")
 
 	block, err := aes.NewCipher(key)

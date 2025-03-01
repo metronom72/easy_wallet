@@ -47,8 +47,9 @@ resource "aws_lambda_function" "lambda_function" {
 
   environment {
     variables = {
-      PROJECT     = var.project_name
-      ENVIRONMENT = var.environment
+      PROJECT      = var.project_name
+      ENVIRONMENT  = var.environment
+      DYNAMO_TABLE = var.dynamo_table
     }
   }
 

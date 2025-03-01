@@ -1,16 +1,17 @@
-package internal
+package decrypt
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/hex"
+	"github.com/metronom72/crt_mmc/wallet_issue/internal/encrypt"
 	"log"
 )
 
 func Decrypt(encryptedHex, passphrase string) (string, error) {
 	log.Println("[INFO] Starting decryption process...")
 
-	key := md5Hash(passphrase)
+	key := encrypt.Md5Hash(passphrase)
 
 	encryptedData, err := hex.DecodeString(encryptedHex)
 	if err != nil {

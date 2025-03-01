@@ -34,3 +34,8 @@ variable "runtime" {
   description = "Identifier of runtime"
   type        = string
 }
+
+variable "dynamo_table" {
+  description = "DynamoDB table name"
+  type        = string
+}

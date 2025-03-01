@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"github.com/metronom72/crt_mmc/wallet_issue/internal/dynamo"
+	"github.com/metronom72/crt_mmc/wallet_issue/internal/wallet"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/metronom72/wallet_issue/internal"
 )
 
 type Request struct {
@@ -30,14 +31,14 @@ func processRequest(req Request) (Response, int) {
 		return Response{Error: "Missing ID or Password"}, http.StatusBadRequest
 	}
 
-	privateKey, publicKey, err := internal.GenerateWallet()
+	privateKey, publicKey, err := wallet.GenerateWallet()
 	if err != nil {
 		log.Printf("[ERROR] Wallet generation failed: %v", err)
 		return Response{Error: "Failed to generate wallet"}, http.StatusInternalServerError
 	}
 	log.Println("[SUCCESS] Wallet generated")
 
-	err = internal.StoreWallet(req.ID, req.Password, privateKey, publicKey)
+	err = dynamo.StoreWallet(req.ID, req.Password, privateKey, publicKey)
 	if err != nil {
 		log.Printf("[ERROR] Failed to store wallet: %v", err)
 		return Response{Error: "Failed to store wallet"}, http.StatusInternalServerError

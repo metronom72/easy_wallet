@@ -31,6 +31,7 @@ resource "aws_iam_policy" "lambda_policy" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+
       {
         Effect   = "Allow"
         Action   = [
@@ -40,6 +41,7 @@ resource "aws_iam_policy" "lambda_policy" {
         ]
         Resource = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.lambda_full_name}:*"
       },
+
       {
         Effect   = "Allow"
         Action   = [
@@ -47,6 +49,30 @@ resource "aws_iam_policy" "lambda_policy" {
           "s3:PutObject"
         ]
         Resource = "arn:aws:s3:::${local.bucket_name}/${var.environment}/${var.lambda_name}.zip"
+      },
+
+      {
+        Effect   = "Allow"
+        Action   = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query"
+        ]
+        Resource = "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.dynamo_table}"
+      },
+
+      {
+        Effect   = "Allow"
+        Action   = [
+          "secretsmanager:CreateSecret",
+          "secretsmanager:PutSecretValue",
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:UpdateSecret"
+        ]
+        Resource = "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:/wallets/private/*"
       }
     ]
   })

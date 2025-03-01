@@ -1,7 +1,9 @@
-package internal
+package dynamo
 
 import (
 	"fmt"
+	"github.com/metronom72/crt_mmc/wallet_issue/internal/encrypt"
+	"github.com/metronom72/crt_mmc/wallet_issue/internal/ssm"
 	"log"
 	"os"
 
@@ -32,13 +34,13 @@ func StoreWallet(id, password, privateKey, publicKey string) error {
 	}
 	db := dynamodb.New(sess)
 
-	encryptedID, err := Encrypt(id, password)
+	encryptedID, err := encrypt.Encrypt(id, password)
 	if err != nil {
 		log.Printf("[ERROR] Failed to encrypt ID: %v", err)
 		return err
 	}
 
-	encryptedPrivateKey, err := Encrypt(privateKey, password)
+	encryptedPrivateKey, err := encrypt.Encrypt(privateKey, password)
 	if err != nil {
 		log.Printf("[ERROR] Failed to encrypt private key: %v", err)
 		return err
@@ -59,7 +61,7 @@ func StoreWallet(id, password, privateKey, publicKey string) error {
 
 	log.Println("[SUCCESS] Wallet stored in DynamoDB successfully")
 
-	err = StorePrivateKey("/wallets/private/"+encryptedID, encryptedPrivateKey)
+	err = ssm.StorePrivateKey("/wallets/private/"+encryptedID, encryptedPrivateKey)
 	if err != nil {
 		log.Printf("[ERROR] Failed to store encrypted private key in Secrets Manager: %v", err)
 		return err

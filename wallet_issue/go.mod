@@ -1,4 +1,4 @@
-module github.com/metronom72/wallet_issue
+module github.com/metronom72/crt_mmc/wallet_issue
 
 go 1.22.5
 
