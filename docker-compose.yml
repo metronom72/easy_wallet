@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  web:
+    image: nginx:latest
+    container_name: simple-http-server
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html/frontend:ro
+    restart: always
