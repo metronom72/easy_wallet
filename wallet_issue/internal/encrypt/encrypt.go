@@ -33,7 +33,7 @@ func Encrypt(data, passphrase string) (string, error) {
 
 	nonce := make([]byte, 12)
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		log.Printf("[ERROR] Error generating nonce: %v", err)
+		log.Printf("[ERROR] Error generating token: %v", err)
 		return "", err
 	}
 

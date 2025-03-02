@@ -1,0 +1,7 @@
+.aws-sam/
+dist/
+*.zip
+infra/.terraform/
+infra/.terraform.lock.hcl
+infra/terraform.tfvars
+.env

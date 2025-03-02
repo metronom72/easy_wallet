@@ -87,7 +87,16 @@ async function verifyTelegramData(authData) {
 window.onload = async function () {
     console.log("Window loaded. Initializing authentication check...");
     const authData = parseQueryParams();
-    document.getElementById("auth-data").textContent = JSON.stringify(authData, null, 4);
+
+    const sortedConcatenatedData = Object.entries(authData)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .filter(([key, value]) => key !== 'hash')
+        .map(([key, value]) => `${key}=${value}`)
+        .join("\\n");
+
+    document.getElementById("auth-data").textContent = JSON.stringify(authData, null, 4)
+
+    document.getElementById("sorted-auth-data").textContent = sortedConcatenatedData;
 
     document.getElementById("verify-btn").addEventListener("click", async () => {
         console.log("Verify button clicked.");
