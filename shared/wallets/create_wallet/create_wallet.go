@@ -52,7 +52,7 @@ func CreateWallet(ctx context.Context, id, password, privateKey, publicKey strin
 	wallet := Wallet{
 		ID:        id,
 		PublicKey: publicKey,
-		SecretRef: "/wallet/private/" + encryptedId,
+		SecretRef: "/wallets/private/" + encryptedId,
 	}
 
 	_, err = db.PutItem(ctx, &dynamodb.PutItemInput{
