@@ -12,7 +12,7 @@ provider "aws" {
 }
 
 locals {
-  lambda_full_name = "${substr(var.project_name, 0, 10)}__${substr(var.environment, 0, 4)}__${substr(var.lambda_name, 0, 10)}"
+  lambda_full_name = substr("${var.project_name}__${var.environment}__${var.lambda_name}", 0, 64)
   bucket_name      = var.project_name
   lambda_role_arn = var.lambda_role_arn != "" ? var.lambda_role_arn : aws_iam_role.lambda_role[0].arn
 }
