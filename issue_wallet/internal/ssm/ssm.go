@@ -1,6 +1,7 @@
 package ssm
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -55,4 +56,32 @@ func StorePrivateKey(secretName, privateKey string) error {
 	}
 
 	return nil
+}
+
+func RetrieveSecret(secretName string) (string, error) {
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(os.Getenv("AWS_REGION")),
+	})
+	if err != nil {
+		log.Printf("[ERROR] Failed to create AWS session: %v", err)
+		return "", err
+	}
+
+	svc := secretsmanager.New(sess)
+
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId: aws.String(secretName),
+	}
+
+	result, err := svc.GetSecretValue(input)
+	if err != nil {
+		log.Printf("[ERROR] Failed to retrieve secret from Secrets Manager: %v", err)
+		return "", err
+	}
+
+	if result.SecretString != nil {
+		return *result.SecretString, nil
+	}
+
+	return "", fmt.Errorf("secret %s has no string value", secretName)
 }

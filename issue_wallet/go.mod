@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-lambda-go v1.47.0
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/ethereum/go-ethereum v1.15.1
+	github.com/golang-jwt/jwt/v5 v5.2.1
 )
 
 require (
