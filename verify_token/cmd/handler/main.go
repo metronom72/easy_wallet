@@ -3,14 +3,13 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
 	"log"
 	"net/http"
 	"os"
+	"shared/auth/jwt"
 	"strings"
-	"verify_token/internal/auth"
-
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambda"
 )
 
 type Request struct {
@@ -44,7 +43,7 @@ func processRequest(token string, methodArn string) (events.APIGatewayCustomAuth
 		return generatePolicy("unauthorized", "Deny", methodArn), http.StatusUnauthorized
 	}
 
-	if _, err := auth.Verify(token); err != nil {
+	if _, err := jwt.Verify(token); err != nil {
 		log.Println("[ERROR] Token verification failed:", err)
 		return generatePolicy("unauthorized", "Deny", methodArn), http.StatusUnauthorized
 	}

@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/metronom72/crt_mmc/wallet_issue/internal/dynamo"
-	"github.com/metronom72/crt_mmc/wallet_issue/internal/wallet"
+	"issue_wallet/internal/dynamo"
 	"log"
 	"net/http"
 	"os"
+	"shared/wallets/generate_wallet"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -31,7 +31,7 @@ func processRequest(req Request) (Response, int) {
 		return Response{Error: "Missing ID or Password"}, http.StatusBadRequest
 	}
 
-	privateKey, publicKey, err := wallet.GenerateWallet()
+	privateKey, publicKey, err := generate_wallet.GenerateWallet()
 	if err != nil {
 		log.Printf("[ERROR] Wallet generation failed: %v", err)
 		return Response{Error: "Failed to generate wallet"}, http.StatusInternalServerError

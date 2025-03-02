@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"issue_token/internal/auth"
-	"issue_token/internal/token"
 	"log"
 	"net/http"
 	"os"
+	"shared/auth/jwt"
+	"shared/auth/telegram"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -25,20 +25,25 @@ type Response struct {
 func processRequest(req Request) (Response, int) {
 	log.Println("[INFO] Processing request...")
 
-	valid, err := auth.Verify(req.DataCheckString, req.Hash)
+	valid, err := telegram.VerifyTelegramAuth(req.DataCheckString, req.Hash)
 	if err != nil || !valid {
 		log.Printf("[ERROR] Request data verification error %v", err)
 		return Response{Error: "invalid hash"}, http.StatusUnauthorized
 	}
 
-	jwt, err := token.GenerateJWT(req.DataCheckString)
+	data, err := telegram.ParseDataCheckString(req.DataCheckString)
+	if err != nil {
+		log.Printf("[ERROR] Request data verification error %v", err)
+		return Response{Error: "invalid data check string"}, http.StatusUnauthorized
+	}
 
+	token, err := jwt.GenerateJWT(data)
 	if err != nil {
 		log.Printf("[ERROR] Failed to generate JWT %v", err)
 		return Response{Error: "failed to generate token"}, http.StatusInternalServerError
 	}
 
-	return Response{Token: jwt}, http.StatusOK
+	return Response{Token: token}, http.StatusOK
 }
 
 func lambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
