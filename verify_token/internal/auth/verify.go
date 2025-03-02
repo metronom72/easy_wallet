@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/golang-jwt/jwt/v5"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -56,6 +58,10 @@ func GetBotToken() (string, error) {
 }
 
 func Verify(tokenString string) (*jwt.Token, error) {
+	if !isValidJWTFormat(tokenString) {
+		return nil, fmt.Errorf("malformed token [%v]: incorrect JWT format", tokenString)
+	}
+
 	secret, err := GetBotToken()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve bot token: %v", err)
@@ -82,4 +88,17 @@ func Verify(tokenString string) (*jwt.Token, error) {
 	}
 
 	return token, nil
+}
+
+func isValidJWTFormat(token string) bool {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return false
+	}
+	for _, part := range parts {
+		if _, err := base64.RawURLEncoding.DecodeString(part); err != nil {
+			return false
+		}
+	}
+	return true
 }

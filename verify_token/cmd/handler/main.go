@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"verify_token/internal/auth"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -13,7 +14,7 @@ import (
 )
 
 type Request struct {
-	Token string `json:"token"`
+	Token string `json:"token,omitempty"`
 }
 
 type Response struct {
@@ -21,42 +22,77 @@ type Response struct {
 	Error    string `json:"error,omitempty"`
 }
 
-func processRequest(req Request) (Response, int) {
-	log.Println("[INFO] Processing request...")
-
-	if _, err := auth.Verify(req.Token); err != nil {
-		log.Println("[ERROR] Token verification failed:", err)
-		return Response{
-			Error:    "Failed to verify token",
-			Verified: false,
-		}, http.StatusUnauthorized
+func extractTokenFromHeaders(headers map[string]string) string {
+	authHeader, exists := headers["Authorization"]
+	if !exists {
+		return ""
 	}
 
-	return Response{
-		Verified: true,
-	}, http.StatusOK
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
+		return parts[1]
+	}
+
+	return ""
 }
 
-func lambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	log.Println("[INFO] Lambda function invoked")
+func processRequest(token string, methodArn string) (events.APIGatewayCustomAuthorizerResponse, int) {
+	log.Println("[INFO] Processing request...")
 
-	var req Request
-	if err := json.Unmarshal([]byte(request.Body), &req); err != nil {
-		log.Printf("[ERROR] Failed to parse request: %v", err)
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: `{"error":"Invalid request format"}`}, nil
+	if token == "" {
+		log.Println("[ERROR] Missing token")
+		return generatePolicy("unauthorized", "Deny", methodArn), http.StatusUnauthorized
 	}
 
-	resp, statusCode := processRequest(req)
+	if _, err := auth.Verify(token); err != nil {
+		log.Println("[ERROR] Token verification failed:", err)
+		return generatePolicy("unauthorized", "Deny", methodArn), http.StatusUnauthorized
+	}
 
-	body, _ := json.Marshal(resp)
+	return generatePolicy("authorized-user", "Allow", methodArn), http.StatusOK
+}
+
+func generatePolicy(principalID, effect, resource string) events.APIGatewayCustomAuthorizerResponse {
+	return events.APIGatewayCustomAuthorizerResponse{
+		PrincipalID: principalID,
+		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
+			Version: "2012-10-17",
+			Statement: []events.IAMPolicyStatement{
+				{
+					Action:   []string{"execute-api:Invoke"},
+					Effect:   effect,
+					Resource: []string{resource},
+				},
+			},
+		},
+	}
+}
+
+func extractToken(token string) string {
+	token = strings.TrimSpace(token)
+	if strings.HasPrefix(strings.ToLower(token), "bearer ") {
+		return strings.TrimSpace(strings.TrimPrefix(token, "Bearer "))
+	}
+	return token
+}
+
+func lambdaHandler(ctx context.Context, request events.APIGatewayCustomAuthorizerRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
+	log.Println("[INFO] Lambda Authorizer Invoked")
+	log.Printf("[DEBUG] Context: %+v", ctx)
+
+	requestJSON, _ := json.MarshalIndent(request, "", "  ")
+	log.Printf("[DEBUG] Incoming Request: %s", string(requestJSON))
+
+	token := extractToken(request.AuthorizationToken)
+	log.Printf("[DEBUG] Extracted Token: %s", token)
+
+	resp, statusCode := processRequest(token, request.MethodArn)
+
+	respJSON, _ := json.MarshalIndent(resp, "", "  ")
 	log.Printf("[INFO] Response Status: %d", statusCode)
-	log.Printf("[INFO] Response Body: %s", string(body))
+	log.Printf("[INFO] Response Body: %s", string(respJSON))
 
-	return events.APIGatewayProxyResponse{
-		StatusCode: statusCode,
-		Headers:    map[string]string{"Content-Type": "application/json"},
-		Body:       string(body),
-	}, nil
+	return resp, nil
 }
 
 func localHTTPHandler(w http.ResponseWriter, r *http.Request) {
@@ -68,18 +104,31 @@ func localHTTPHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req Request
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Printf("[ERROR] Failed to parse request: %v", err)
-		http.Error(w, `{"error": "Invalid request format"}`, http.StatusBadRequest)
-		return
+	requestJSON, _ := json.MarshalIndent(r, "", "  ")
+	log.Printf("[DEBUG] Incoming HTTP Request: %s", string(requestJSON))
+
+	token := extractToken(r.Header.Get("Authorization"))
+	if token == "" {
+		var req Request
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			log.Printf("[ERROR] Failed to parse request: %v", err)
+			http.Error(w, `{"error": "Invalid request format"}`, http.StatusBadRequest)
+			return
+		}
+		token = extractToken(req.Token)
 	}
 
-	resp, statusCode := processRequest(req)
+	log.Printf("[DEBUG] Extracted Token: %s", token)
+
+	resp, statusCode := processRequest(token, "*")
+
+	respJSON, _ := json.MarshalIndent(resp, "", "  ")
+	log.Printf("[INFO] Response Status: %d", statusCode)
+	log.Printf("[INFO] Response Body: %s", string(respJSON))
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(resp)
+	w.Write(respJSON)
 }
 
 func main() {
@@ -87,13 +136,13 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 
 	if os.Getenv("AWS_LAMBDA_RUNTIME_API") != "" {
-		log.Println("[INFO] Starting AWS Lambda function")
+		log.Println("[INFO] Starting AWS Lambda Authorizer function")
 		lambda.Start(lambdaHandler)
 	} else {
 		port := "3000"
 		log.Printf("[INFO] Starting local server on port %s...", port)
 
-		http.HandleFunc("/endpoint", localHTTPHandler)
+		http.HandleFunc("/auth", localHTTPHandler)
 		err := http.ListenAndServe(":"+port, nil)
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to start server: %v", err)
