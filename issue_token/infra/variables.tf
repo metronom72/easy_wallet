@@ -39,8 +39,3 @@ variable "bot_token_secret_name" {
   description = "BOT_TOKEN secret name"
   type        = string
 }
-
-variable "dynamodb_table" {
-  description = "DynamoDB table name"
-  type        = string
-}
