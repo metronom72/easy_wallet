@@ -27,12 +27,14 @@ func processRequest(req Request) (Response, int) {
 
 	valid, err := auth.Verify(req.DataCheckString, req.Hash)
 	if err != nil || !valid {
+		log.Printf("[ERROR] Request data verification error %v", err)
 		return Response{Error: "invalid hash"}, http.StatusUnauthorized
 	}
 
 	jwt, err := token.GenerateJWT(req.DataCheckString)
 
 	if err != nil {
+		log.Printf("[ERROR] Failed to generate JWT %v", err)
 		return Response{Error: "failed to generate token"}, http.StatusInternalServerError
 	}
 
@@ -69,12 +71,6 @@ func localHTTPHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "Method not allowed"}`, http.StatusMethodNotAllowed)
 		return
 	}
-
-	//var req2 map[string]any
-	//if err := json.NewDecoder(r.Body).Decode(&req2); err != nil {
-	//	http.Error(w, "Invalid JSON", http.StatusBadRequest)
-	//	return
-	//}
 
 	var req Request
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
