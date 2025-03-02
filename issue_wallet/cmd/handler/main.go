@@ -38,14 +38,14 @@ func processRequest(req Request) (Response, int) {
 	}
 	log.Println("[SUCCESS] Wallet generated")
 
-	err = dynamo.StoreWallet(req.ID, req.Password, privateKey, publicKey)
+	walletAddress, err := dynamo.StoreWallet(req.ID, req.Password, privateKey, publicKey)
 	if err != nil {
 		log.Printf("[ERROR] Failed to store wallet: %v", err)
 		return Response{Error: "Failed to store wallet"}, http.StatusInternalServerError
 	}
 	log.Println("[SUCCESS] Wallet stored successfully")
 
-	return Response{PublicKey: publicKey}, http.StatusOK
+	return Response{PublicKey: walletAddress}, http.StatusOK
 }
 
 func lambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
