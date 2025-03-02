@@ -6,3 +6,4 @@ infra/.terraform.lock.hcl
 infra/terraform.tfvars
 .env
 infra/terraform.tfstate.backup
+infra/terraform.tfstate
