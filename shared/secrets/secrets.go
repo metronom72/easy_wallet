@@ -1,9 +1,9 @@
-package auth
+package secrets
 
 import (
-	"crt-mmc/shared/aws/secrets_manager"
 	"errors"
 	"os"
+	"shared/aws/secrets_manager"
 )
 
 func GetBotToken() (string, error) {

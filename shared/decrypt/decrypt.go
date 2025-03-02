@@ -4,8 +4,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/hex"
-	"github.com/metronom72/crt_mmc/wallet_issue/internal/encrypt"
 	"log"
+	"shared/encrypt"
 )
 
 func Decrypt(encryptedHex, passphrase string) (string, error) {

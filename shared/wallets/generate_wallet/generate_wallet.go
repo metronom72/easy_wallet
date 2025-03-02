@@ -1,4 +1,4 @@
-package wallet
+package generate_wallet
 
 import (
 	"encoding/hex"

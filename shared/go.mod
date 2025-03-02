@@ -1,4 +1,4 @@
-module crt-mmc
+module shared
 
 go 1.23.0
 
