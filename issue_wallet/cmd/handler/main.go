@@ -51,10 +51,18 @@ func processRequest(req Request) (Response, int) {
 func lambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	log.Println("[INFO] Lambda function invoked")
 
+	log.Println("[INFO] Request Headers:")
+	for key, value := range request.Headers {
+		log.Printf("[INFO] %s: %s", key, value)
+	}
+
 	var req Request
 	if err := json.Unmarshal([]byte(request.Body), &req); err != nil {
 		log.Printf("[ERROR] Failed to parse request: %v", err)
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: `{"error":"Invalid request format"}`}, nil
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusBadRequest,
+			Body:       `{"error":"Invalid request format"}`,
+		}, nil
 	}
 
 	resp, statusCode := processRequest(req)

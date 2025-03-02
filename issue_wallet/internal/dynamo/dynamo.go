@@ -34,6 +34,21 @@ func StoreWallet(id, password, privateKey, publicKey string) error {
 	}
 	db := dynamodb.New(sess)
 
+	result, err := db.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {S: aws.String(id)},
+		},
+	})
+	if err != nil {
+		log.Printf("[ERROR] Failed to check existing wallet: %v", err)
+		return err
+	}
+	if result.Item != nil {
+		log.Printf("[ERROR] Wallet with ID %s already exists", id)
+		return fmt.Errorf("wallet already exists")
+	}
+
 	encryptedID, err := encrypt.Encrypt(id, password)
 	if err != nil {
 		log.Printf("[ERROR] Failed to encrypt ID: %v", err)
@@ -49,7 +64,7 @@ func StoreWallet(id, password, privateKey, publicKey string) error {
 	_, err = db.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String(tableName),
 		Item: map[string]*dynamodb.AttributeValue{
-			"id":         {S: aws.String(encryptedID)},
+			"id":         {S: aws.String(id)},
 			"public_key": {S: aws.String(publicKey)},
 			"secret_ref": {S: aws.String("/wallets/private/" + encryptedID)},
 		},
