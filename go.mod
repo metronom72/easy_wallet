@@ -3,6 +3,13 @@ module easy-wallet
 go 1.23.0
 
 require (
+	github.com/joho/godotenv v1.5.1
+	gorm.io/datatypes v1.2.5
+	gorm.io/driver/postgres v1.5.11
+	gorm.io/gorm v1.25.12
+)
+
+require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/go-sql-driver/mysql v1.9.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -15,8 +22,5 @@ require (
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
-	gorm.io/datatypes v1.2.5 // indirect
 	gorm.io/driver/mysql v1.5.7 // indirect
-	gorm.io/driver/postgres v1.5.11 // indirect
-	gorm.io/gorm v1.25.12 // indirect
 )
