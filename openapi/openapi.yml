@@ -1,0 +1,262 @@
+openapi: 3.0.3
+info:
+  title: MemCoint Issue API
+  description:
+  contact:
+    email: mikhail@dorokhovich.com
+  version: 1.0.0
+tags:
+  - name: auth
+    description: "Authentication and user identity management operations"
+  - name: wallet OPs
+    description: "Operations related to wallet management, including transactions and balances"
+servers:
+  - url: http://localhost:3000
+    description: Local Development API
+paths:
+  /auth/user:
+    post:
+      tags:
+        - auth
+      summary: User authentication
+      operationID: getUserAuth
+      requestBody:
+        description: Authenticate a user using the specified provider
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthUserRequest"
+      responses:
+        "200":
+          description: User successfully authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+  /auth/devices/{id}:
+    get:
+      tags:
+        - auth
+      summary: Retrieve public key for a specific device
+      operationId: getDeviceAuth
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the device
+      security:
+        - Authorization: [ ]
+      responses:
+        "200":
+          description: Successfully retrieved device authentication details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthDeviceResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+  /auth/devices:
+    get:
+      tags:
+        - auth
+      summary: Retrieve a list of authorized devices
+      operationId: getDeviceList
+      security:
+        - Authorization: [ ]
+      responses:
+        "200":
+          description: Successfully retrieved the list of authorized devices
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    post:
+      tags:
+        - auth
+      summary: Register a new Device
+      description: Register new authorized device
+      operationId: createAuthorizedDevice
+      security:
+        - Authorization: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId:
+                  type: string
+                  description: Unique identifier for new device
+              required:
+                - deviceId
+      responses:
+        "201":
+          $ref: "#/components/schemas/AuthorizedDeviceResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+components:
+  securitySchemes:
+    Authorization:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: "Bearer token received from /auth/user"
+  schemas:
+    AuthUserRequest:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum: [telegram]
+          description: "Authentication provider"
+        data:
+          type: object
+          additionalProperties: true
+          description: "Additional provider-specific data"
+      required:
+        - provider
+
+    AuthorizedDeviceResponse:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        publicKey:
+          type: string
+        expiredAt:
+          type: string
+          format: date-time
+
+    AuthUserResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: "JWT token for access"
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              description: "User identifier"
+            username:
+              type: string
+              description: "User's name (if available)"
+            email:
+              type: string
+              nullable: true
+              description: "User's email (if available)"
+            external_id:
+              type: string
+              nullable: false
+              description: "External ID retrieved from provider"
+            provider:
+              type: string
+              enum: [telegram]
+              description: "Authentication provider used"
+            created_at:
+              type: string
+              nullable: false
+              description: "Created At Timestamp"
+            updated_at:
+              type: string
+              nullable: false
+              description: "Updated At Timestamp"
+
+    AuthDeviceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Device identifier"
+        publicKey:
+          type: string
+          description: "Public key associated with the device"
+
+    DeviceListResponse:
+      type: object
+      properties:
+        devices:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "Device identifier"
+              name:
+                type: string
+                description: "Device name"
+              createdAt:
+                type: string
+                format: date-time
+                description: "Device creation timestamp"
+              lastAccessedAt:
+                type: string
+                format: date-time
+                description: "Last access timestamp"
+              status:
+                type: string
+                enum: [active, inactive, blocked]
+                description: "Device authentication status"
+
+  responses:
+    BadRequestError:
+      description: Invalid request or missing required parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Bad Request"
+              details:
+                type: string
+                example: "Missing required field: provider"
+
+    UnauthorizedError:
+      description: Access denied, authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Unauthorized"
+
+    NotFoundError:
+      description: Requested resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Not Found"

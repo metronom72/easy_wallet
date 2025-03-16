@@ -1,8 +1,6 @@
 go 1.23.0
 
 use (
-	./issue_token
-	./issue_wallet
-	./shared
-	./verify_token
+	internal
+	auth-user
 )

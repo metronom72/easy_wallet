@@ -9,3 +9,28 @@ services:
     volumes:
       - ./frontend:/usr/share/nginx/html/frontend:ro
     restart: always
+
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  swagger-ui:
+    image: swaggerapi/swagger-ui:v5.20.1
+    environment:
+      SWAGGER_JSON: /oas/openapi.yml
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./openapi:/oas
+
+volumes:
+  pgdata:
+    driver: local
