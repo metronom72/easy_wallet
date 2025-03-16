@@ -1,8 +1,8 @@
 package db
 
 import (
-	"easy-wallet/internal/models"
 	"fmt"
+	"internal/models"
 	"log"
 	"os"
 	"os/exec"

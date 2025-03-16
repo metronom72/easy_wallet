@@ -50,6 +50,8 @@ async function hmacSha256(key, message) {
 function constructDataCheckString(authData) {
     console.log("Constructing data_check_string...");
     const { hash, ...dataWithoutHash } = authData;
+
+    console.log(dataWithoutHash, hash)
     const sortedData = Object.entries(dataWithoutHash)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, value]) => `${key}=${value}`)

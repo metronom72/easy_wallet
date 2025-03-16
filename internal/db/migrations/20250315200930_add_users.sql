@@ -19,11 +19,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    username TEXT UNIQUE,
-    email TEXT UNIQUE ,
-    providers JSONB NOT NULL DEFAULT '[]'::JSONB,
+    username TEXT,
+    email TEXT,
+    external_id TEXT NOT NULL,
+    provider TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT unique_external_provider UNIQUE (external_id, provider)
 );
 
 CREATE TRIGGER set_updated_at

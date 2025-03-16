@@ -22,6 +22,14 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+  swagger-ui:
+    image: swaggerapi/swagger-ui:v5.20.1
+    environment:
+      SWAGGER_JSON: /oas/openapi.yml
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./openapi:/oas
 
 volumes:
   pgdata:

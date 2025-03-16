@@ -5,11 +5,14 @@ info:
   contact:
     email: mikhail@dorokhovich.com
   version: 1.0.0
-  tags:
-    - name: auth
-      description:
-    - name: wallet OPs
-      description:
+tags:
+  - name: auth
+    description: "Authentication and user identity management operations"
+  - name: wallet OPs
+    description: "Operations related to wallet management, including transactions and balances"
+servers:
+  - url: http://localhost:3000
+    description: Local Development API
 paths:
   /auth/user:
     post:
@@ -99,7 +102,7 @@ components:
       properties:
         provider:
           type: string
-          enum: [telegram, keycloak, google, facebook]
+          enum: [telegram]
           description: "Authentication provider"
         data:
           type: object
@@ -127,10 +130,22 @@ components:
               type: string
               nullable: true
               description: "User's email (if available)"
+            external_id:
+              type: string
+              nullable: false
+              description: "External ID retrieved from provider"
             provider:
               type: string
               enum: [telegram]
               description: "Authentication provider used"
+            created_at:
+              type: string
+              nullable: false
+              description: "Created At Timestamp"
+            updated_at:
+              type: string
+              nullable: false
+              description: "Updated At Timestamp"
 
     AuthDeviceResponse:
       type: object
