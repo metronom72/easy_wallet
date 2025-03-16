@@ -55,7 +55,7 @@ paths:
             type: string
           description: Unique identifier of the device
       security:
-        - Authorization: []
+        - Authorization: [ ]
       responses:
         "200":
           description: Successfully retrieved device authentication details
@@ -69,21 +69,50 @@ paths:
           $ref: "#/components/responses/UnauthorizedError"
         "404":
           $ref: "#/components/responses/NotFoundError"
+
   /auth/devices:
     get:
       tags:
         - auth
-      summary: Retrieve a list of authenticated devices
+      summary: Retrieve a list of authorized devices
       operationId: getDeviceList
       security:
-        - Authorization: []
+        - Authorization: [ ]
       responses:
         "200":
-          description: Successfully retrieved the list of devices
+          description: Successfully retrieved the list of authorized devices
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeviceListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    post:
+      tags:
+        - auth
+      summary: Register a new Device
+      description: Register new authorized device
+      operationId: createAuthorizedDevice
+      security:
+        - Authorization: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId:
+                  type: string
+                  description: Unique identifier for new device
+              required:
+                - deviceId
+      responses:
+        "201":
+          $ref: "#/components/schemas/AuthorizedDeviceResponse"
+
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -110,6 +139,17 @@ components:
           description: "Additional provider-specific data"
       required:
         - provider
+
+    AuthorizedDeviceResponse:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        publicKey:
+          type: string
+        expiredAt:
+          type: string
+          format: date-time
 
     AuthUserResponse:
       type: object
