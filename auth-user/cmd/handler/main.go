@@ -18,6 +18,7 @@ type Request struct {
 
 type Response struct {
 	User  models.User `json:"user"`
+	Token string      `json:"token"`
 	Error error       `json:"error"`
 }
 
@@ -34,10 +35,14 @@ func processRequest(ctx context.Context, req Request) (Response, int) {
 		return Response{Error: err}, http.StatusBadRequest
 	}
 
-	log.Print(userData)
+	token, err := auth.EncodeUser()
+	if err != nil {
+		return Response{Error: err}, http.StatusBadRequest
+	}
 
 	return Response{
 		User:  *userData,
+		Token: token,
 		Error: nil,
 	}, http.StatusOK
 }

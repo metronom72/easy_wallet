@@ -15,6 +15,9 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type ProviderEnum string
@@ -102,4 +105,18 @@ func (a *Auth) authorizeTelegram() (map[string]interface{}, error) {
 	}
 
 	return verifiedData, nil
+}
+
+func (a *Auth) EncodeUser() (string, error) {
+	secret := os.Getenv("JWT_SECRET")
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":          a.UserData.ID,
+		"username":    a.UserData.Username,
+		"email":       a.UserData.Email,
+		"external_id": a.UserData.ExternalID,
+		"provider":    a.UserData.Provider,
+		"exp":         time.Now().Add(time.Hour * 1).Unix(),
+	})
+
+	return token.SignedString([]byte(secret))
 }
